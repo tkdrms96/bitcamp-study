@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tobabogi.demo.eventboard.mapper.EventReplyMapper">
+
+
+
+    <insert id="insert">
+        insert into tbl_event_notice_comment (comment, enbno_id, isdelete, sequence)
+        values (#{comment}, #{enbno_id}, 0, 0)
+
+        <selectKey order="AFTER" resultType="long" keyProperty="encno_id">
+            select last_insert_id()
+        </selectKey>
+
+    </insert>
+
+    <update id="insertKey">
+        update tbl_event_notice_comment set parent = encno_id where encno_id = encno_id
+    </update>
+<!--    update-> insert가 일어날때 selectKey로 가지고온 insert할때 id를 parent로 저장하는 함수 -->
+
+<!--여기까지 댓글 저장임-->
+<!--여기까지 댓글 저장임-->
+<!--여기까지 댓글 저장임-->
+
+    <insert id="levelReplyInsert">
+        insert into tbl_event_notice_comment (comment,enbno_id, isdelete, sequence, parent, level)
+        values (#{comment}, #{enbno_id}, 0,(select IFNULL(MAX(sequence)+ 1,1) from tbl_event_notice_comment tbl where parent = #{encno_id}) ,#{encno_id}, 1)
+    </insert>
+
+    <!--여기까지 답글 달기임-->
+    <!--여기까지 답글 달기임-->
+    <!--여기까지 답글 달기임-->
+
+
+    <select id="getListWithBoard" resultType="com.tobabogi.demo.eventboard.domain.EventReply">
+        select * from tbl_event_notice_comment where enbno_id = #{enbno_id} order by parent asc, sequence asc limit #{skip} , #{size}
+    </select>
+
+    <!--여기까지 댓글 리스트 뿌려주기 임-->
+    <!--여기까지 댓글 리스트 뿌려주기 임-->
+    <!--여기까지 댓글 리스트 뿌려주기 임-->
+
+
+
+    <update id="delete">
+        update tbl_event_notice_comment set isdelete = 1 where encno_id = #{encno_id}
+    </update>
+
+    <!--여기까지 댓글 삭제 임 -->
+    <!--여기까지 댓글 삭제 임 -->
+    <!--여기까지 댓글 삭제 임 -->
+
+    <update id="update">
+        update tbl_event_notice_comment set comment = #{comment}, modDate = now() where encno_id = #{encno_id}
+    </update>
+
+
+    <!--여기까지 댓글 수정 임 -->
+    <!--여기까지 댓글 수정 임 -->
+    <!--여기까지 댓글 수정 임 -->
+
+    <select id="replyCount" resultType="int">
+        select count(enbno_id) from tbl_event_notice_comment where enbno_id = #{enbno_id}
+    </select>
+
+
+</mapper>
+

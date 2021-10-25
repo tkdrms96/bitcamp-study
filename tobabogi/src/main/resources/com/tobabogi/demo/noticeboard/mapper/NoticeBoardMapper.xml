@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tobabogi.demo.noticeboard.mapper.NoticeBoardMapper">
+
+    <sql id="search">
+        <if test="type != null">
+            <foreach collection="arr" item="item" separator=" OR " open="WHERE (" close=")">
+                <if test="item == 'T'.toString()">
+                    title like concat('%',#{keyword},'%')
+                </if>
+                <if test="item == 'C'.toString()">
+                    description like concat('%',#{keyword},'%')
+                </if>
+            </foreach>
+            <if test="type != null">
+                and isdelete = 0
+            </if>
+        </if>
+
+        <if test="type == null">
+            where isdelete = 0
+        </if>
+    </sql>
+    <!--    검색조건 얘는 writer가 빠짐 (쓴사람이 무조건 관리자라)-->
+
+
+    <select id="getList" resultType="com.tobabogi.demo.noticeboard.domain.NoticeBoard">
+        select * from tbl_notice_board
+        <include refid="search"></include>
+        order by nbno_id desc limit #{skip}, #{size}
+        <!--&#45;&#45;     order by bno desc limit #{skip},#{size}-->
+    </select>
+
+    <select id="getCount" resultType="int">
+        select count(nbno_id) from tbl_notice_board where isdelete = 0
+    </select>
+
+    <!--    list sql-->
+
+    <insert id="insert">
+        insert into tbl_notice_board (title, description, regdate, moddate, hits,isdelete)
+        values (#{title}, #{description}, now(), now(), '0', '0' )
+        <selectKey order="AFTER" resultType="long" keyProperty="bno">
+            select last_insert_id()
+        </selectKey>
+    </insert>
+
+    <!--    insert sql-->
+
+
+
+    <update id="update">
+        update tbl_notice_board set title = #{title}, description = #{description}, modDate = now()
+        where nbno_id = #{nbno_id}
+    </update>
+    <!--    update tbl_notice_board set title= 'ff', description = 'abcd', moddate = now()
+    where nbno_id = '2' -->
+
+
+    <update id="remove">
+        update tbl_notice_board set modDate = now(), isdelete = ${isDelete}
+        where nbno_id = #{nbno_id}
+    </update>
+
+    <!--    삭제쿼리 -> update해서 isdelete 가 true로 바뀌어야함 (검색조건에서 제외하는 녀석)-->
+
+    <update id="hitsUpdate">
+        update tbl_notice_board set hits = ifnull(hits,0) + 1
+        WHERE nbno_id = #{nbno_id}
+    </update>
+
+    <insert id="insertAttach">
+        insert into tbl_notice_board_attach
+        (nano_id,fileName,img_thumbnail_name,Path,isImage,regDate,tbl_notice_nbno_id,isdelete)
+            value (#{nano_id},#{fileName},#{img_thumbnail_name},#{Path},#{isImage},now(),#{tbl_notice_nbno_id},'true')
+    </insert>
+
+
+
+
+
+    <select id="select" resultMap="boardMap">
+        select * from tbl_notice_board board left join tbl_notice_board_attach ta on
+            board.nbno_id = ta.tbl_notice_nbno_id
+        where board.nbno_id = #{nbno_id}
+    </select>
+
+
+    <resultMap id="boardMap" type="com.tobabogi.demo.noticeboard.domain.NoticeBoard">
+        <id property="nbno_id" column="nbno_id"></id>
+        <!-- id = PK / property = class에 선언된 것이 뭔지 / column = 컬럼명이 뭔지 -->
+        <result property="title" column="title"></result>
+        <result property="description" column="description"></result>
+        <result property="regDate" column="regDate"></result>
+        <result property="modDate" column="modDate"></result>
+        <result property="hits" column="hits"></result>
+        <result property="isDelete" column="isDelete"></result>
+
+        <collection property="attachList" resultMap="attachMap"></collection>
+        <!-- Board에 선언된 collection type -->
+    </resultMap>
+
+    <resultMap id="attachMap" type="com.tobabogi.demo.noticeboard.domain.NoticeBoardAttach">
+        <!--중첩?-->
+        <result property="nano_id" column="nano_id"></result>
+        <result property="fileName" column="fileName"></result>
+        <result property="img_thumbnail_name" column="img_thumbnail_name"></result>
+        <result property="isImage" column="isImage"></result>
+        <result property="isDelete" column="isDelete"></result>
+        <result property="Path" column="Path"></result>
+        <result property="regDate" column="regDate"></result>
+        <result property="tbl_notice_nbno_id" column="tbl_notice_nbno_id"></result>
+
+    </resultMap>
+
+
+
+
+    <delete id="deleteAttach">
+        delete from tbl_notice_board_attach where tbl_notice_nbno_id = #{nano_id}
+    </delete>
+
+
+</mapper>

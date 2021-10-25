@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="tobabogi_db@tobabogi2.cgyceoshvren.ap-northeast-2.rds.amazonaws.com" uuid="65a65c93-3d98-45f5-a1ef-187bb24f7c67">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://tobabogi2.cgyceoshvren.ap-northeast-2.rds.amazonaws.com:3306/tobabogi_db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>

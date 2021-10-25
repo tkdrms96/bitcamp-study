@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tobabogi.demo.eventboard.mapper.EventBoardMapper">
+
+    <sql id="search">
+        <if test="type != null">
+            <foreach collection="arr" item="item" separator=" OR " open="WHERE (" close=")">
+                <if test="item == 'T'.toString()">
+                    title like concat('%',#{keyword},'%')
+                </if>
+                <if test="item == 'C'.toString()">
+                    description like concat('%',#{keyword},'%')
+                </if>
+                <if test="item == 'W'.toString()">
+                    writer like concat('%', #{keyword}, '%')
+                </if>
+
+            </foreach>
+            <if test="type != null">
+                and isdelete = 0
+            </if>
+        </if>
+
+        <if test="type == null">
+            where isdelete = 0
+        </if>
+    </sql>
+    <!--    검색조건 동적으로 만들기 writer가 빠짐 (쓴사람이 무조건 관리자라)-->
+
+
+    <select id="getList" resultType="com.tobabogi.demo.eventboard.domain.EventBoard">
+        select * from tbl_event_notice_board
+        <include refid="search"></include>
+        order by enbno_id
+
+        desc limit #{skip}, #{size}
+        <!--&#45;&#45;     order by bno desc limit #{skip},#{size}-->
+    </select>
+
+    <select id="getCount" resultType="int">
+        select count(enbno_id) from tbl_event_notice_board where isdelete = 0
+    </select>
+
+    <select id="select" resultMap="boardMap">
+        select * from tbl_event_notice_board board left join tbl_event_notice_board_attach ta on
+            board.enbno_id = ta.tbl_event_notice_board_enbno_id
+        where board.enbno_id = #{enbno_id}
+    </select>
+
+    <!--     select-->
+    <!--     select-->
+    <!--     select-->
+
+    <insert id="insert">
+        insert into tbl_event_notice_board (title, description, regdate, moddate, hits,isdelete)
+        values (#{title}, #{description}, now(), now(), '0', '0' )
+        <selectKey order="AFTER" resultType="long" keyProperty="bno">
+            select last_insert_id()
+        </selectKey>
+    </insert>
+
+
+    <insert id="insertAttach">
+        insert into tbl_event_notice_board_attach
+        (uuid,fileName,img_thumbnail_name,Path,isImage,regDate,tbl_event_notice_board_enbno_id)
+            value (#{uuid},#{fileName},#{img_thumbnail_name},#{Path},#{isImage},now(),#{tbl_event_notice_board_enbno_id})
+    </insert>
+<!--    파일 업로드 관련 insert문-->
+
+
+<!--    insert-->
+<!--    insert-->
+<!--    insert-->
+
+    <update id="update">
+        update tbl_event_notice_board set title = #{title}, description = #{description}, modDate = now()
+        where enbno_id = #{enbno_id}
+    </update>
+    <!--    update tbl_event_notice_board set title= 'ff', description = 'abcd', moddate = now()
+    where enbno_id = '2' -->
+
+
+    <update id="remove">
+        update tbl_event_notice_board set modDate = now(), isdelete = ${isDelete}
+        where enbno_id = #{enbno_id}
+    </update>
+
+    <!--    삭제쿼리 -> update해서 isdelete 가 true로 바뀌어야함 (검색조건에서 제외하는 녀석)-->
+
+    <update id="hitsUpdate">
+        update tbl_event_notice_board set hits = ifnull(hits,0) + 1
+        WHERE enbno_id = #{enbno_id}
+    </update>
+
+<!--    조회수 업데이트 -->
+
+
+<!--update-->
+<!--update-->
+<!--update-->
+<!--update-->
+
+
+    <resultMap id="boardMap" type="com.tobabogi.demo.eventboard.domain.EventBoard">
+        <id property="enbno_id" column="enbno_id"></id>
+        <!-- id = PK / property = class에 선언된 것이 뭔지 / column = 컬럼명이 뭔지 -->
+        <result property="title" column="title"></result>
+        <result property="description" column="description"></result>
+        <result property="regDate" column="regDate"></result>
+        <result property="modDate" column="modDate"></result>
+        <result property="hits" column="hits"></result>
+        <result property="isDelete" column="isDelete"></result>
+
+        <collection property="attachList" resultMap="attachMap"></collection>
+        <!-- Board에 선언된 collection type -->
+    </resultMap>
+
+    <resultMap id="attachMap" type="com.tobabogi.demo.eventboard.domain.EventBoardAttach">
+        <!--중첩?-->
+        <result property="uuid" column="uuid"></result>
+        <result property="fileName" column="fileName"></result>
+        <result property="img_thumbnail_name" column="img_thumbnail_name"></result>
+        <result property="isImage" column="isImage"></result>
+        <result property="isDelete" column="isDelete"></result>
+        <result property="Path" column="Path"></result>
+        <result property="regDate" column="regDate"></result>
+        <result property="tbl_event_notice_board_enbno_id" column="tbl_event_notice_board_enbno_id"></result>
+
+    </resultMap>
+
+<!--게시글 / 첨부파일 left join 해주는 쿼리-->
+
+
+    <delete id="deleteAttach">
+        delete from tbl_event_notice_board_attach where tbl_event_notice_board_enbno_id = #{uuid}
+    </delete>
+
+<!--    첨부파일 삭제 쿼리-->
+
+
+</mapper>
